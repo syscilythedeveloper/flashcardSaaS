@@ -1,12 +1,12 @@
 
 "use client"
-import { SignIn } from "@clerk/clerk-react";
+import { SignUp } from "@clerk/clerk-react";
 import { AppBar, Box, Button, Container, Toolbar, Typography, Link } from "@mui/material";
 
 
-export default function SignInPage(){
+export default function SignUpPage(){
     return (
-        <Container maxWidth="100vh">
+        <Container maxWidth="100vw">
             <AppBar position = "static" sx={{backgroundColor:"#3f51b5"}}>
                 <Toolbar>
                     <Typography variant="h6" sx={{
@@ -28,8 +28,12 @@ export default function SignInPage(){
             flexDirection="column" 
             alignItems="center"
             justifyContent="center">
-                <Typography variant ="h4">Sign In</Typography>
-                <SignIn />            
+                <Typography variant ="h4">Sign Up</Typography>
+                <SignUp />
+                
+                
+
+                
             </Box>
            
         </Container>
