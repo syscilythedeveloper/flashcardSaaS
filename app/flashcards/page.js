@@ -1,60 +1,82 @@
-"use client"
+"use client";
+import { useUser } from "@clerk/nextjs";
+import { useEffect, useState } from "react";
+import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
+import { db } from "@/firebase";
+import { useRouter } from "next/navigation";
+import {
+  CardActionArea,
+  Container,
+  Grid,
+  Card,
+  CardContent,
+  Typography,
+} from "@mui/material";
 
-import { useUser } from "@clerk/nextjs"
-import { useEffect, useState } from "react"
-import { collection, doc, getDoc, setDoc } from "firebase/firestore"
-import { db } from "@/firebase"
-import { useRouter } from "next/navigation"
-import { CardActionArea, Container, Grid, Card, CardContent, Typography } from "@mui/material"
+export default function Flashcard() {
+  const { isLoading, isSignedIn, user } = useUser();
+  const [flashcards, setFlashcards] = useState([]);
+  const router = useRouter();
+  const getFlashcards = async () => {
+    if (!user) return;
 
-export default function Flashcard(){
-    const {isLoading, isSignedIn, user} = useUser()
-    const [flashcards, setFlashcards] = useState([])
-    const router = useRouter()
-    
-    
+    const docRef = doc(db, "users", user.id);
+    const docSnap = await getDoc(docRef);
 
-    useEffect(() =>{
-        async function getFlashcards(params) {
-            if (!user) return 
-            const docRef = doc(collection(db, "users"), user.id)
-            const docSnap = await getDoc(docRef)
+    if (docSnap.exists()) {
+      const collectionsNames = docSnap.data().flashcards || [];
 
-            if (docSnap.exists()){
-                const collections = docSnap.data().flashcards || []
-                console.log(collections)
-                setFlashcards(collections)
-            }
-            else{
-                await setDoc(docRef, {flashcards: []})
-            }
-        }
-        getFlashcards()
-    }, [user])
+      const flashcardsData = await Promise.all(
+        collectionsNames.map(async (collectionData) => {
+          const collectionName = collectionData.name;
+          const collectionRef = collection(
+            db,
+            "users",
+            user.id,
+            collectionName
+          );
+          const collectionSnap = await getDocs(collectionRef);
 
-    if (!isLoading || !isSignedIn){
-        return <></>
+          const flashcardsList = collectionSnap.docs.map((doc) => doc.data());
+          return { name: collectionName, cards: flashcardsList };
+        })
+      );
+
+      setFlashcards(flashcardsData);
+    } else {
+      await setDoc(docRef, { flashcards: [] });
     }
-    const handleCardClick = (id) => {
-        router.push(`/flashcards?id=${id}`)
-    }
-    
-    return (
-        <Container maxWidth = "100vw">
-            <Grid container spacing={3} sx={{mt:4}}>
-                {flashcards.map((flashcard, index) => (
-                <Grid item xs={12} sm={6} md={4} key={index}>
-                    <Card>
-                        <CardActionArea onClick={() => {handleCardClick(id)}}>
-                        </CardActionArea>
-                        <CardContent>
-                            <Typography variant="h6">{flashcard.name}</Typography>
-                        </CardContent>
-                    </Card>
-                </Grid>
-                ))}
-            </Grid>
+  };
 
-        </Container>
-    )
+  useEffect(() => {
+    getFlashcards();
+  }, [user]);
+
+  if (isLoading || !isSignedIn) {
+    return <></>;
+  }
+  const handleCardClick = (id) => {
+    router.push(`/flashcards?id=${id}`);
+  };
+
+  return (
+    <Container maxWidth="100vw">
+      <Grid container spacing={3} sx={{ mt: 4 }}>
+        {flashcards.map((flashcard, index) => (
+          <Grid item xs={12} sm={6} md={4} key={index}>
+            <Card>
+              <CardActionArea
+                onClick={() => {
+                  handleCardClick(id);
+                }}
+              ></CardActionArea>
+              <CardContent>
+                <Typography variant="h6">{flashcard.name}</Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+    </Container>
+  );
 }
