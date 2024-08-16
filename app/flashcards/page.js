@@ -1,9 +1,9 @@
-"use client";
-import { useUser } from "@clerk/nextjs";
-import { useEffect, useState } from "react";
-import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
-import { db } from "@/firebase";
-import { useRouter } from "next/navigation";
+'use client';
+import { useUser } from '@clerk/nextjs';
+import { useEffect, useState } from 'react';
+import { collection, doc, getDoc, getDocs, setDoc } from 'firebase/firestore';
+import { db } from '../../firebase';
+import { useRouter } from 'next/navigation';
 import {
   CardActionArea,
   Container,
@@ -11,16 +11,18 @@ import {
   Card,
   CardContent,
   Typography,
-} from "@mui/material";
+  Button,
+} from '@mui/material';
 
 export default function Flashcard() {
   const { isLoading, isSignedIn, user } = useUser();
   const [flashcards, setFlashcards] = useState([]);
   const router = useRouter();
+
   const getFlashcards = async () => {
     if (!user) return;
 
-    const docRef = doc(db, "users", user.id);
+    const docRef = doc(db, 'users', user.id);
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
@@ -31,7 +33,7 @@ export default function Flashcard() {
           const collectionName = collectionData.name;
           const collectionRef = collection(
             db,
-            "users",
+            'users',
             user.id,
             collectionName
           );
@@ -41,7 +43,7 @@ export default function Flashcard() {
           return { name: collectionName, cards: flashcardsList };
         })
       );
-
+      console.log(flashcardsData);
       setFlashcards(flashcardsData);
     } else {
       await setDoc(docRef, { flashcards: [] });
@@ -58,31 +60,50 @@ export default function Flashcard() {
 
   if (flashcards.length === 0) {
     return (
-      <Container maxWidth="100vw">
-        <Typography variant="h4" sx={{ mt: 4 }}>
+      <Container
+        maxWidth='100vw'
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <Typography variant='h4' sx={{ mt: 4 }}>
           You have no flashcards yet!
         </Typography>
+        <Button
+          variant='contained'
+          href='/generate'
+          color='primary'
+          sx={{ mt: 2 }}
+        >
+          Start making cards
+        </Button>
       </Container>
     );
   }
 
-  const handleCardClick = (id) => {
-    router.push(`/flashcards?id=${id}`);
+  const handleCardClick = (name, cards) => {
+    router.push(
+      `/flashcardPage?name=${name}&cards=${encodeURIComponent(
+        JSON.stringify(cards)
+      )}`
+    );
   };
 
   return (
-    <Container maxWidth="100vw">
+    <Container maxWidth='100vw'>
       <Grid container spacing={3} sx={{ mt: 4 }}>
         {flashcards.map((flashcard, index) => (
           <Grid item xs={12} sm={6} md={4} key={index}>
             <Card>
-              <CardActionArea
+              <CardActionArea></CardActionArea>
+              <CardContent
                 onClick={() => {
-                  handleCardClick(id);
+                  handleCardClick(flashcard.name, flashcard.cards);
                 }}
-              ></CardActionArea>
-              <CardContent>
-                <Typography variant="h6">{flashcard.name}</Typography>
+              >
+                <Typography variant='h6'>{flashcard.name}</Typography>
               </CardContent>
             </Card>
           </Grid>

@@ -1,7 +1,7 @@
-"use client";
-import { useUser } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+'use client';
+import { useUser } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import {
   Container,
   Box,
@@ -18,46 +18,47 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
-} from "@mui/material";
-import { db } from "@/firebase";
+} from '@mui/material';
+import CircularProgress from '@mui/material/CircularProgress';
+import { db } from '../../firebase';
 import {
   doc,
   getDoc,
   setDoc,
   collection,
   writeBatch,
-} from "firebase/firestore";
+} from 'firebase/firestore';
 
 export default function Generate() {
   const { isLoaded, isSignedIn, user } = useUser();
   const [flashcards, setFlashcards] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [flipped, setFlipped] = useState([]);
-  const [text, setText] = useState("");
-  const [name, setName] = useState("");
+  const [text, setText] = useState('');
+  const [name, setName] = useState('');
   const [open, setOpen] = useState(false);
   const [needsMoreInfo, setNeedsMoreInfo] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async () => {
     setIsLoading(true);
-    fetch("api/generate", {
-      method: "POST",
+    fetch('api/generate', {
+      method: 'POST',
       body: text,
     })
       .then((res) => res.json())
       .then((data) => {
-        if (data?.error == "I need more information.") {
-          alert("I need more information");
+        if (data?.error == 'I need more information.') {
+          alert('I need more information');
           setNeedsMoreInfo(true);
-          setText("");
+          setText('');
           return;
         }
         setFlashcards(data);
       })
       .catch((error) => {
-        console.error("Failed to generate flashcards:", error);
-        alert("Failed to generate flashcards");
+        console.error('Failed to generate flashcards:', error);
+        alert('Failed to generate flashcards');
       })
       .finally(() => {
         setIsLoading(false);
@@ -81,22 +82,22 @@ export default function Generate() {
 
   const saveFlashcards = async () => {
     if (!isSignedIn || !user) {
-      alert("You must be signed in to save flashcards");
+      alert('You must be signed in to save flashcards');
       return;
     }
     if (!name) {
-      alert("Please enter a name");
+      alert('Please enter a name');
       return;
     }
 
     const batch = writeBatch(db);
-    const userDocRef = doc(collection(db, "users"), user.id);
+    const userDocRef = doc(collection(db, 'users'), user.id);
     const docSnap = await getDoc(userDocRef);
 
     if (docSnap.exists()) {
       const collections = docSnap.data().flashcards || [];
       if (collections.find((f) => f.name === name)) {
-        alert("Flashcard collection with the same name already exits");
+        alert('Flashcard collection with the same name already exits');
         return;
       } else {
         collections.push({ name });
@@ -112,39 +113,51 @@ export default function Generate() {
     });
 
     await batch.commit();
-    console.log("Flashcards saved ", flashcards);
+    console.log('Flashcards saved ', flashcards);
     // handleClose();
     // router.push("/flashcards");
   };
 
   return (
-    <Container maxWidth="md">
+    <Container maxWidth='md'>
       <Box
         sx={{
           mt: 4,
           mb: 6,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
         }}
       >
-        <Typography variant="h4"> Generate Flashcards</Typography>
-        <Paper sx={{ p: 4, width: "100%" }}>
+        <Typography variant='h4'> Generate Flashcards</Typography>
+        <Paper sx={{ p: 4, width: '100%' }}>
+          {isLoading && (
+            <CircularProgress
+              size={80}
+              sx={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                zIndex: 1000,
+              }}
+            />
+          )}
           <TextField
             value={text}
             onChange={(e) => setText(e.target.value)}
-            label="enter text"
+            label='enter text'
             fullWidth
             multiline
             rows={4}
-            variant="outlined"
+            variant='outlined'
             sx={{
               mb: 2,
             }}
           />
           <Button
-            variant="contained"
-            color="primary"
+            variant='contained'
+            color='primary'
             onClick={handleSubmit}
             fullWidth
             disabled={flashcards.length > 0 || isLoading}
@@ -153,7 +166,7 @@ export default function Generate() {
           </Button>
 
           {needsMoreInfo && (
-            <Typography variant="h6" color="error">
+            <Typography variant='h6' color='error'>
               Please provide more information/context in the input.
             </Typography>
           )}
@@ -161,7 +174,7 @@ export default function Generate() {
       </Box>
       {flashcards.length > 0 && (
         <Box sm={{ mt: 4 }}>
-          <Typography variant="h5">Flashcards Preview</Typography>
+          <Typography variant='h5'>Flashcards Preview</Typography>
           <Grid container spacing={3}>
             {flashcards.map((flashcard, index) => {
               return (
@@ -175,43 +188,43 @@ export default function Generate() {
                       <CardContent>
                         <Box
                           sx={{
-                            perspective: "1000px",
-                            "& > div": {
-                              transition: "transform 0.6s",
-                              transformStyle: "preserve-3d",
-                              position: "relative",
-                              width: "100%",
-                              height: "200px",
-                              boxShadow: "0 4px 8px 0 rgba(0,0,0,0.2)",
+                            perspective: '1000px',
+                            '& > div': {
+                              transition: 'transform 0.6s',
+                              transformStyle: 'preserve-3d',
+                              position: 'relative',
+                              width: '100%',
+                              height: '200px',
+                              boxShadow: '0 4px 8px 0 rgba(0,0,0,0.2)',
                               transform: flipped[index]
-                                ? "rotateY(180deg)"
-                                : "rotateY(0deg)",
+                                ? 'rotateY(180deg)'
+                                : 'rotateY(0deg)',
                             },
-                            "& > div > div": {
-                              position: "absolute",
-                              width: "100%",
-                              height: "100%",
-                              backfaceVisibility: "hidden",
-                              display: "flex",
-                              justifyContent: "center",
-                              alignItems: "center",
+                            '& > div > div': {
+                              position: 'absolute',
+                              width: '100%',
+                              height: '100%',
+                              backfaceVisibility: 'hidden',
+                              display: 'flex',
+                              justifyContent: 'center',
+                              alignItems: 'center',
                               padding: 2,
-                              boxSizing: "border-box",
+                              boxSizing: 'border-box',
                             },
 
-                            "& > div > div:nth-of-type(2)": {
-                              transform: "rotateY(180deg)",
+                            '& > div > div:nth-of-type(2)': {
+                              transform: 'rotateY(180deg)',
                             },
                           }}
                         >
                           <div>
                             <div>
-                              <Typography variant="h5" component="div">
+                              <Typography variant='h5' component='div'>
                                 {flashcard.front}
                               </Typography>
                             </div>
                             <div>
-                              <Typography variant="h5" component="div">
+                              <Typography variant='h5' component='div'>
                                 {flashcard.back}
                               </Typography>
                             </div>
@@ -227,11 +240,11 @@ export default function Generate() {
           <Box
             sx={{
               mt: 4,
-              display: "flex",
-              justifyContent: "center",
+              display: 'flex',
+              justifyContent: 'center',
             }}
           >
-            <Button variant="contained" color="secondary" onClick={handleOpen}>
+            <Button variant='contained' color='secondary' onClick={handleOpen}>
               Save
             </Button>
           </Box>
@@ -245,13 +258,13 @@ export default function Generate() {
           </DialogContentText>
           <TextField
             autoFocus
-            margin="dense"
-            label="Collection Name"
-            type="text"
+            margin='dense'
+            label='Collection Name'
+            type='text'
             fullWidth
             value={name}
             onChange={(e) => setName(e.target.value)}
-            variant="outlined"
+            variant='outlined'
           />
         </DialogContent>
         <DialogActions>
