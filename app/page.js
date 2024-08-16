@@ -14,13 +14,15 @@ import Head from 'next/head';
 
 export default function Home() {
   return (
-    <Container maxWidth='lg'>
+    <Container >
       <Head>
         <title>Flashcard SaaS</title>
         <meta name='description' content='Create flashcard from your text' />
       </Head>
 
-      <AppBar position='static'>
+      <AppBar
+      position='static'
+      >
         <Toolbar>
           <Typography variant='h6' style={{ flexGrow: 1 }}>
             Flashcard Sass
