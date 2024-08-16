@@ -17,6 +17,7 @@ export default function Flashcard() {
   const { isLoading, isSignedIn, user } = useUser();
   const [flashcards, setFlashcards] = useState([]);
   const router = useRouter();
+
   const getFlashcards = async () => {
     if (!user) return;
 
