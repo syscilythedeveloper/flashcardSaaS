@@ -55,6 +55,17 @@ export default function Flashcard() {
   if (isLoading || !isSignedIn) {
     return <></>;
   }
+
+  if (flashcards.length === 0) {
+    return (
+      <Container maxWidth="100vw">
+        <Typography variant="h4" sx={{ mt: 4 }}>
+          You have no flashcards yet!
+        </Typography>
+      </Container>
+    );
+  }
+
   const handleCardClick = (id) => {
     router.push(`/flashcards?id=${id}`);
   };
