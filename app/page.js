@@ -14,19 +14,11 @@ import {
 import Navbar from "./components/NavBar";
 import Head from "next/head";
 import Stripe from "stripe";
-<<<<<<< HEAD
 import { useEffect, useState } from "react";
 
 export default function Home() {
   const { user } = useUser();
   const [suscription, setSuscription] = useState(false);
-=======
-import { useEffect } from "react";
-
-export default function Home() {
-  const { user } = useUser();
-
->>>>>>> eadd5dcbeeb15380ca941adcc742426a9025ce33
   const stripe = new Stripe(
     "sk_test_51PoZ1gA1Bes7OdcoHZ5Y1pfe3wOAlNVfdz9ziYGAwFKjXCvtMMPYSh5cmgoVUCUDCc5G8IJvOK99HdSdnMWzZ0VS00SaZlixMb",
     {
