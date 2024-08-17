@@ -1,9 +1,9 @@
-'use client';
-import { useUser } from '@clerk/nextjs';
-import { useEffect, useState } from 'react';
-import { collection, doc, getDoc, getDocs, setDoc } from 'firebase/firestore';
-import { db } from '../../firebase';
-import { useRouter } from 'next/navigation';
+"use client";
+import { useUser } from "@clerk/nextjs";
+import { useEffect, useState } from "react";
+import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
+import { db } from "../../firebase";
+import { useRouter } from "next/navigation";
 import {
   CardActionArea,
   Container,
@@ -12,17 +12,26 @@ import {
   CardContent,
   Typography,
   Button,
-} from '@mui/material';
+  Divider,
+  Box,
+  Autocomplete,
+  TextField,
+} from "@mui/material";
+import Navbar from "../components/NavBar";
+import CircularProgress from "@mui/material/CircularProgress";
 
 export default function Flashcard() {
   const { isLoading, isSignedIn, user } = useUser();
+  const [loadingFlashcards, setLoadingFlashcards] = useState(true);
   const [flashcards, setFlashcards] = useState([]);
   const router = useRouter();
 
   const getFlashcards = async () => {
     if (!user) return;
 
-    const docRef = doc(db, 'users', user.id);
+    setLoadingFlashcards(true);
+
+    const docRef = doc(db, "users", user.id);
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
@@ -33,7 +42,7 @@ export default function Flashcard() {
           const collectionName = collectionData.name;
           const collectionRef = collection(
             db,
-            'users',
+            "users",
             user.id,
             collectionName
           );
@@ -43,11 +52,11 @@ export default function Flashcard() {
           return { name: collectionName, cards: flashcardsList };
         })
       );
-      console.log(flashcardsData);
       setFlashcards(flashcardsData);
     } else {
       await setDoc(docRef, { flashcards: [] });
     }
+    setLoadingFlashcards(false);
   };
 
   useEffect(() => {
@@ -58,31 +67,6 @@ export default function Flashcard() {
     return <></>;
   }
 
-  if (flashcards.length === 0) {
-    return (
-      <Container
-        maxWidth='100vw'
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        <Typography variant='h4' sx={{ mt: 4 }}>
-          You have no flashcards yet!
-        </Typography>
-        <Button
-          variant='contained'
-          href='/generate'
-          color='primary'
-          sx={{ mt: 2 }}
-        >
-          Start making cards
-        </Button>
-      </Container>
-    );
-  }
-
   const handleCardClick = (name, cards) => {
     router.push(
       `/flashcardPage?name=${name}&cards=${encodeURIComponent(
@@ -91,23 +75,118 @@ export default function Flashcard() {
     );
   };
 
-  return (
-    <Container maxWidth='100vw'>
-      <Grid container spacing={3} sx={{ mt: 4 }}>
-        {flashcards.map((flashcard, index) => (
-          <Grid item xs={12} sm={6} md={4} key={index}>
-            <Card>
-              <CardActionArea></CardActionArea>
-              <CardContent
-                onClick={() => {
-                  handleCardClick(flashcard.name, flashcard.cards);
-                }}
+  const FlashCardsList = () => {
+    if (loadingFlashcards) {
+      return (
+        <Box
+          height="100%"
+          display="flex"
+          justifyContent={"center"}
+          alignItems={"center"}
+        >
+          <CircularProgress />
+        </Box>
+      );
+    }
+
+    return (
+      <Box overflow="auto" height="100%">
+        {flashcards.length === 0 && (
+          <Typography variant="h6" gutterBottom>
+            No flashcards found
+          </Typography>
+        )}
+
+        {flashcards.length > 0 &&
+          flashcards.map((flashcard) => (
+            <Card
+              sx={{
+                width: "100%",
+                mt: 2,
+              }}
+              key={flashcard.name}
+            >
+              <CardActionArea
+                onClick={() => handleCardClick(flashcard.name, flashcard.cards)}
               >
-                <Typography variant='h6'>{flashcard.name}</Typography>
-              </CardContent>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    {flashcard.name}
+                  </Typography>
+                  <Typography>{flashcard.cards.length} flashcards</Typography>
+                </CardContent>
+              </CardActionArea>
             </Card>
-          </Grid>
-        ))}
+          ))}
+      </Box>
+    );
+  };
+
+  return (
+    <Container
+      maxWidth="xl"
+      sx={{
+        height: "100vh",
+      }}
+      style={{ paddingInline: "40px" }}
+      overflowY="hidden"
+    >
+      <Navbar />
+
+      <Grid
+        container
+        spacing={2}
+        sx={{ height: "calc(100% - 10%)", width: "100%" }}
+        paddingTop={8}
+        overflowY="hidden"
+      >
+        {/* Left Side - Title and Create Button */}
+        <Grid
+          item
+          xs={12} // Full width on extra-small screens
+          md={4} // 8/12 width on medium and larger screens
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center", // Center vertically
+            alignItems: "center", // Center horizontally
+            textAlign: { xs: "center", md: "left" }, // Center text on small screens
+          }}
+          overflowY="hidden"
+        >
+          <Box display="flex" justifyContent="center">
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => router.push("/generate")}
+            >
+              Generate flashcards
+            </Button>
+          </Box>
+        </Grid>
+        {/* Right Side - Flashcard List */}
+        <Grid
+          item
+          xs={12} // Full width on extra-small screens
+          md={8} // 4/12 width on medium and larger screens
+          sx={{
+            height: "100%", // Full height
+            padding: { xs: 1, md: 2 }, // Adjust padding based on screen size
+          }}
+          maxHeight={{ xs: "60%", md: "90%" }}
+          overflowY="hidden"
+        >
+          <Autocomplete
+            options={flashcards}
+            getOptionLabel={(option) => option.name}
+            renderInput={(params) => (
+              <TextField {...params} label="Flashcards" variant="outlined" />
+            )}
+            sx={{ mb: 2 }}
+          />
+          <Divider />
+          <FlashCardsList />
+        </Grid>
       </Grid>
     </Container>
   );
