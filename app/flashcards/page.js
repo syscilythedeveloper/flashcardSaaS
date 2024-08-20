@@ -24,6 +24,8 @@ export default function Flashcard() {
   const { isLoading, isSignedIn, user } = useUser();
   const [loadingFlashcards, setLoadingFlashcards] = useState(true);
   const [flashcards, setFlashcards] = useState([]);
+  const [filteredFlashcards, setFilteredFlashcards] = useState([]);
+  const [searchInput, setSearchInput] = useState("");
   const router = useRouter();
 
   const getFlashcards = async () => {
@@ -53,6 +55,7 @@ export default function Flashcard() {
         })
       );
       setFlashcards(flashcardsData);
+      setFilteredFlashcards(flashcardsData); // Initialize with all flashcards
     } else {
       await setDoc(docRef, { flashcards: [] });
     }
@@ -60,16 +63,21 @@ export default function Flashcard() {
   };
 
   useEffect(() => {
-    getFlashcards();
-  }, [user]);
+    if (!isLoading && isSignedIn) {
+      getFlashcards();
+    }
+  }, [user, isLoading, isSignedIn]);
+
+  useEffect(() => {
+    // Filter flashcards based on the search input
+    const filtered = flashcards.filter((flashcard) =>
+      flashcard.name.toLowerCase().includes(searchInput.toLowerCase())
+    );
+    setFilteredFlashcards(filtered);
+  }, [searchInput, flashcards]);
 
   if (isLoading) {
-    return <>ddf</>;
-  }
-
-  if (!isLoading && !isSignedIn) {
-    router.push("/sign-in");
-    return;
+    return <CircularProgress />;
   }
 
   const handleCardClick = (name, cards) => {
@@ -96,14 +104,14 @@ export default function Flashcard() {
 
     return (
       <Box overflow="auto" height="100%">
-        {flashcards.length === 0 && (
+        {filteredFlashcards.length === 0 && (
           <Typography variant="h6" gutterBottom>
             No flashcards found
           </Typography>
         )}
 
-        {flashcards.length > 0 &&
-          flashcards.map((flashcard) => (
+        {filteredFlashcards.length > 0 &&
+          filteredFlashcards.map((flashcard) => (
             <Card
               sx={{
                 width: "100%",
@@ -145,17 +153,16 @@ export default function Flashcard() {
         paddingTop={8}
         overflowY="hidden"
       >
-        {/* Left Side - Title and Create Button */}
         <Grid
           item
-          xs={12} // Full width on extra-small screens
-          md={4} // 8/12 width on medium and larger screens
+          xs={12}
+          md={4}
           sx={{
             display: "flex",
             flexDirection: "column",
-            justifyContent: "center", // Center vertically
-            alignItems: "center", // Center horizontally
-            textAlign: { xs: "center", md: "left" }, // Center text on small screens
+            justifyContent: "center",
+            alignItems: "center",
+            textAlign: { xs: "center", md: "left" },
           }}
           overflowY="hidden"
         >
@@ -169,14 +176,13 @@ export default function Flashcard() {
             </Button>
           </Box>
         </Grid>
-        {/* Right Side - Flashcard List */}
         <Grid
           item
-          xs={12} // Full width on extra-small screens
-          md={8} // 4/12 width on medium and larger screens
+          xs={12}
+          md={8}
           sx={{
-            height: "100%", // Full height
-            padding: { xs: 1, md: 2 }, // Adjust padding based on screen size
+            height: "100%",
+            padding: { xs: 1, md: 2 },
           }}
           maxHeight={{ xs: "60%", md: "90%" }}
           overflowY="hidden"
@@ -184,6 +190,10 @@ export default function Flashcard() {
           <Autocomplete
             options={flashcards}
             getOptionLabel={(option) => option.name}
+            inputValue={searchInput}
+            onInputChange={(event, newInputValue) => {
+              setSearchInput(newInputValue);
+            }}
             renderInput={(params) => (
               <TextField {...params} label="Flashcards" variant="outlined" />
             )}

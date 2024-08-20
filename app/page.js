@@ -89,16 +89,7 @@ export default function Home() {
           {" "}
           The easiest way to make flashcards from your text
         </Typography>
-        <SignedOut>
-          <Button
-            variant="contained"
-            href="/sign-in"
-            color="primary"
-            sx={{ mt: 2 }}
-          >
-            Get Started
-          </Button>
-        </SignedOut>
+
         <SignedIn>
           <Button
             variant="contained"
@@ -171,12 +162,19 @@ export default function Home() {
               </Typography>
               <Typography>Create up to 3 flashcards collections.</Typography>
 
-              {suscription ? (
+              {user ? (
                 <Typography variant="body1" color="green" sx={{ mt: 2 }}>
-                  You are already subscribed to the Pro Plan
+                  You are already active
                 </Typography>
               ) : (
-                <Button variant="contained" color="primary" sx={{ mt: 2 }}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  sx={{ mt: 2 }}
+                  onClick={() => {
+                    window.location.href = "/sign-in";
+                  }}
+                >
                   Choose Basic
                 </Button>
               )}

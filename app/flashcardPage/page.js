@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Box,
@@ -9,13 +9,21 @@ import {
   Card,
   CardContent,
   Container,
+  CircularProgress,
 } from "@mui/material";
+import { db } from "../../firebase";
+
 import Navbar from "../components/NavBar";
+import { useUser } from "@clerk/nextjs";
+import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 
 export default function FlashcardPage() {
+  const { isLoading, isSignedIn, user } = useUser();
+  const [loadingFlashcards, setLoadingFlashcards] = useState(true);
+
   const searchParams = useSearchParams();
   const name = searchParams.get("name");
-  const cards = JSON.parse(decodeURIComponent(searchParams.get("cards")));
+  const [flashcards, setFlashcards] = useState([]);
   const [flipped, setFlipped] = useState([]);
 
   const handleCardClick = (id) => {
@@ -24,6 +32,45 @@ export default function FlashcardPage() {
       [id]: !prev[id],
     }));
   };
+
+  const getFlashcards = async () => {
+    if (!user) return;
+
+    setLoadingFlashcards(true);
+
+    const docRef = doc(db, "users", user.id);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const collectionRef = collection(db, "users", user.id, name);
+      const collectionSnap = await getDocs(collectionRef);
+
+      const flashcardsList = collectionSnap.docs.map((doc) => doc.data());
+      setFlashcards(flashcardsList);
+      setFlipped(new Array(flashcardsList.length).fill(false));
+    } else {
+      await setDoc(docRef, { flashcards: [] });
+    }
+    setLoadingFlashcards(false);
+  };
+  useEffect(() => {
+    if (!isLoading && isSignedIn) {
+      getFlashcards();
+    }
+  }, [user, isLoading, isSignedIn]);
+
+  if (loadingFlashcards) {
+    return (
+      <Box
+        height="100%"
+        display="flex"
+        justifyContent={"center"}
+        alignItems={"center"}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <>
@@ -39,7 +86,7 @@ export default function FlashcardPage() {
       >
         <Navbar />
 
-        {cards.length > 0 && (
+        {flashcards.length > 0 && (
           <Box
             sx={{
               mt: 4,
@@ -51,7 +98,7 @@ export default function FlashcardPage() {
           >
             {" "}
             <Grid container spacing={3}>
-              {cards.map((card, index) => {
+              {flashcards.map((card, index) => {
                 return (
                   <Grid item xs={12} sm={6} md={4} key={index}>
                     <Card>
