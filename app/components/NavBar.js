@@ -2,7 +2,7 @@ import React from "react";
 import { AppBar, Button, Toolbar, Typography, Box } from "@mui/material";
 import { SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import HomeIcon from "@mui/icons-material/Home";
+// import HomeIcon from "@mui/icons-material/Home";
 export default function Navbar() {
   const { user } = useUser();
 
@@ -31,9 +31,9 @@ export default function Navbar() {
             }}
             onClick={() => router.push("/flashcards")}
           >
-            <HomeIcon
+            {/* <HomeIcon
               sx={{ marginRight: "0.5rem" }} // Add some spacing between the icon and the text
-            />
+            /> */}
             Home
           </Typography>
         </SignedIn>
